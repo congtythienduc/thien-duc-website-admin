@@ -180,8 +180,8 @@ test.describe('§11 — Nội dung công khai (frontend)', () => {
     // Public API trả banner vừa tạo (nguồn CMS local).
     const banners = await publicGet('/banners');
     const titles = (
-      banners.body as { data: { title: { vi: string } }[] }
-    ).data.map((b) => b.title.vi);
+      banners.body as { data: { title: { vi: string } | null }[] }
+    ).data.map((b) => b.title?.vi);
     expect(titles).toContain(BANNER_TITLE);
 
     // Trang chủ render banner từ CMS (có trong DOM).

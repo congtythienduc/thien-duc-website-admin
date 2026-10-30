@@ -215,7 +215,7 @@ test.describe('Admin — Lời mời tài khoản (mục 7)', () => {
 
     // Thu hồi qua UI (mở dialog xác nhận rồi bấm "Thu hồi lời mời").
     const row = page.getByRole('row').filter({ hasText: invited });
-    await row.getByRole('button', { name: 'Thu hồi' }).click();
+    await row.getByRole('button', { name: 'Thu hồi', exact: true }).click();
     const revokeResp = page.waitForResponse(
       (r) =>
         r.url().includes('/revoke-invitation') &&

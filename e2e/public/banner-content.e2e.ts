@@ -61,6 +61,7 @@ const seeded: BannerSeedEntry[] = JSON.parse(
 
 const seed = seedAccounts();
 let superToken = '';
+const temporarilyHidden: string[] = [];
 
 const VIEWPORTS = [
   { name: 'mobile', width: 375, height: 812 },
@@ -76,6 +77,20 @@ test.beforeAll(async () => {
   execSync('npm run prisma:seed:banners', { cwd: BACKEND_DIR, stdio: 'pipe' });
   superToken = (await apiLogin(seed.superAdmin.email, seed.superAdmin.password))
     .body!.data!.accessToken;
+  // DB test cục bộ có thể còn fixture của lượt chạy khác; chỉ cô lập banner,
+  // không xóa dữ liệu và trả lại trạng thái khi kết thúc.
+  const existing = (await authedGet('/banners/admin', superToken)).body as { data: BannerRecord[] };
+  const images = new Set(seeded.map(banner => banner.image));
+  for (const banner of existing.data.filter(banner => banner.isActive && !images.has(banner.image))) {
+    temporarilyHidden.push(banner.id);
+    expect((await authedPatch(`/banners/${banner.id}`, superToken, { isActive: false })).status).toBe(200);
+  }
+});
+
+test.afterAll(async () => {
+  for (const id of temporarilyHidden) {
+    expect((await authedPatch(`/banners/${id}`, superToken, { isActive: true })).status).toBe(200);
+  }
 });
 
 async function publicBanners(): Promise<BannerRecord[]> {
@@ -391,9 +406,10 @@ for (const vp of VIEWPORTS) {
         name: seeded[0].title.vi,
       });
       await expect(heading).toBeVisible();
-      await expect(
-        banner.getByRole('link', { name: seeded[0].ctaLabel.vi }),
-      ).toBeVisible();
+      const cta = banner.getByTestId('banner-contact-actions').getByText(seeded[0].ctaLabel.vi, { exact: true });
+      // Bố cục hiện tại chỉ hiện nhóm CTA banner từ desktop; mobile ưu tiên ảnh/tiêu đề.
+      if (vp.width >= 1024) await expect(cta).toBeVisible();
+      else await expect(cta).toBeHidden();
 
       // Không tràn ngang toàn trang. Ngưỡng giữ nguyên; `collectOverflow` chờ
       // bố cục ổn định rồi mới đo và kèm theo phần tử gây tràn để log đọc được.
@@ -425,6 +441,10 @@ for (const vp of VIEWPORTS) {
         await expect(locator).toHaveText(
           label === 'tiêu đề' ? seeded[0].title.vi : seeded[0].subtitle.vi,
         );
+        if (label === 'mô tả' && vp.width < 1024) {
+          await expect(locator).toBeHidden();
+          continue;
+        }
         const { clientHeight, lineHeight, lineClamp } = await locator.evaluate((el) => ({
           clientHeight: el.clientHeight,
           lineHeight: parseFloat(getComputedStyle(el).lineHeight),
@@ -535,7 +555,7 @@ test.describe('§15 — Tự chạy khi KHÔNG giảm chuyển động', () => {
   }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await gotoFE(page, '/');
-    const progress = page.locator('.banner-progress');
+    const progress = page.getByRole('region', { name: /banner/i }).first().locator('.banner-progress');
     await expect(progress).toHaveCount(1);
 
     await page

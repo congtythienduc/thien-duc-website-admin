@@ -123,7 +123,7 @@ test('sai mật khẩu hiện tại: báo lỗi, KHÔNG đăng xuất, mật kh�
   await dialog.getByLabel('Xác nhận mật khẩu mới', { exact: true }).fill(NEW_PW);
   await dialog.getByRole('button', { name: 'Gửi mã xác nhận' }).click();
 
-  await expect(page.getByText('Mật khẩu hiện tại không đúng.')).toBeVisible();
+  await expect(dialog.getByRole('alert')).toHaveText('Mật khẩu hiện tại không đúng.');
 
   // Vẫn ở trang hồ sơ, KHÔNG bị đá về đăng nhập (400 không chạm nhánh 401).
   expect(new URL(page.url()).pathname).toBe(adminPath('/ho-so'));

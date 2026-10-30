@@ -121,9 +121,11 @@ test.describe('Admin — Đăng nhập (mục 6)', () => {
     // Mở menu người dùng ở topbar (nút có aria-haspopup) rồi bấm "Đăng xuất".
     await page.locator('button[aria-haspopup="true"]').click();
     await page.getByRole('button', { name: 'Đăng xuất' }).click();
+    // Tổng quan và đăng nhập cùng URL /admin: phải chờ form đăng nhập thay cho URL.
+    await expect(page.getByRole('heading', { name: 'Đăng nhập hệ thống quản trị' })).toBeVisible();
     await expect(page).toHaveURL(/\/admin\/?$/);
     const tokens = await readStoredTokens(page);
-    expect(tokens.local.concat(tokens.session).filter(Boolean)).toHaveLength(0);
+    expect(tokens.local.concat(tokens.session).some(Boolean)).toBe(false);
   });
 
   test('route bảo vệ chuyển hướng về đăng nhập khi chưa đăng nhập', async ({

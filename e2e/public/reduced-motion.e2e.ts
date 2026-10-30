@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { FRONTEND_URL } from '../helpers/config';
+import { waitForAppHydration } from '../helpers/hydration';
 
 /**
  * M2-R2 — `prefers-reduced-motion: reduce` phải trung hoà hiệu ứng reveal trên
@@ -100,22 +101,27 @@ test.describe('§M2-R2 — prefers-reduced-motion trung hoà reveal', () => {
   });
 
   for (const [label, path] of MOTION_PAGES) {
-    test(`${label}: không phần tử stagger nào còn animation/transform, và vẫn hiện`, async ({
+    test(`${label}: carousel không tự chạy, chuyển slide tức thời và vẫn hiện`, async ({
       page,
     }) => {
       await page.goto(`${FRONTEND_URL}${path}`);
       // Cuộn hết trang để IntersectionObserver gắn `.is-revealed` — đúng trạng
       // thái mà người dùng thật gặp, không phải trạng thái trước reveal.
       await scrollAndAwaitReveal(page);
+      await waitForAppHydration(page);
 
       const carousel = await projectCarouselStyles(page);
       expect(carousel, 'trang phải có carousel dự án để test có nghĩa').toBeTruthy();
       expect(carousel!.slides.length).toBeGreaterThan(0);
       expect(carousel!.transitionProperty).toBe('none');
-      expect(
-        isNoTransform(carousel!.transform),
-        `transform = ${carousel!.transform}`,
-      ).toBe(true);
+      // Transform dùng để định vị slide và bản nối vòng, không phải hiệu ứng reveal.
+      // Giảm chuyển động phải bỏ transition/autoplay, vẫn cho chuyển slide thủ công.
+      await expect(page.getByTestId('projects-carousel-progress')).toHaveCount(0);
+      const track = page.getByTestId('projects-carousel-track');
+      const before = await track.getAttribute('data-index');
+      await page.getByRole('button', { name: /dự án tiếp theo|next project/i }).click();
+      await expect(track).not.toHaveAttribute('data-index', before!);
+      expect((await projectCarouselStyles(page))!.transitionProperty).toBe('none');
 
       for (const style of carousel!.slides) {
         expect(Number(style.opacity)).toBe(1);
@@ -140,13 +146,14 @@ test.describe('§M2-R2 — prefers-reduced-motion trung hoà reveal', () => {
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.goto(`${FRONTEND_URL}/du-an`);
     await scrollAndAwaitReveal(page);
+    await waitForAppHydration(page);
 
     const carousel = await projectCarouselStyles(page);
     expect(carousel, 'trang phải có carousel dự án để test có nghĩa').toBeTruthy();
     expect(carousel!.slides.length).toBeGreaterThan(0);
-    // Track phải giữ transition thật cho người không yêu cầu giảm chuyển động.
-    expect(carousel!.transitionProperty).not.toBe('none');
-    expect(carousel!.transitionDuration).not.toBe('0s');
+    // Track nghỉ có thể transition:none để nối vòng; kiểm đúng lúc người dùng chuyển slide.
+    await page.getByRole('button', { name: /dự án tiếp theo|next project/i }).click();
+    await expect(page.getByTestId('projects-carousel-track')).toHaveCSS('transition-property', 'transform');
   });
 
   test('nội dung vẫn đọc được: tiêu đề trang hiển thị khi giảm chuyển động', async ({ page }) => {

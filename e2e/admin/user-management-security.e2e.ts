@@ -124,7 +124,7 @@ test.describe('§9 — Bảo mật quản lý tài khoản', () => {
   }) => {
     await openUserList(page);
     const row = page.getByRole('row').filter({ hasText: activeUser });
-    await row.getByRole('button', { name: 'Sửa' }).click();
+    await row.getByRole('button', { name: 'Sửa', exact: true }).click();
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
     await expect(dialog.getByLabel(/mật khẩu/i)).toHaveCount(0);
@@ -174,7 +174,7 @@ test.describe('§9 — Bảo mật quản lý tài khoản', () => {
   }) => {
     await openUserList(page);
     const row = page.getByRole('row').filter({ hasText: activeUser });
-    await row.getByRole('button', { name: 'Sửa' }).click();
+    await row.getByRole('button', { name: 'Sửa', exact: true }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Họ tên').fill('Payload Update E2E');
     const resp = page.waitForResponse(
