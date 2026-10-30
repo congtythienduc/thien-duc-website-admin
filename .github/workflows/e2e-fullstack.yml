@@ -42,12 +42,12 @@ jobs:
           path: thien-duc-website-admin
       - uses: actions/checkout@v5
         with:
-          repository: CESxMidas/thien-duc-website-backend
+          repository: congtythienduc/thien-duc-website-backend
           token: ${{ secrets.WORKSPACE_TOKEN || github.token }}
           path: thien-duc-website-backend
       - uses: actions/checkout@v5
         with:
-          repository: CESxMidas/thien-duc-website-frontend
+          repository: congtythienduc/thien-duc-website-frontend
           token: ${{ secrets.WORKSPACE_TOKEN || github.token }}
           path: thien-duc-website-frontend
 
