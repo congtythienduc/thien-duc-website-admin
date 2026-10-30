@@ -1,4 +1,5 @@
 import { DeleteContentButton } from "@/components/content/DeleteContentButton";
+import { publishedFirst } from "@/lib/admin-content-order";
 import { usePublicationClock } from "@/lib/use-publication-clock";
 import { useState } from "react";
 import {
@@ -299,7 +300,7 @@ export function PagesPage() {
       />
       <DataTable deletionKind="pages" layout="auto"
         columns={columns}
-        rows={pages}
+        rows={publishedFirst(pages, (page) => derivePagePublicationState(page, now))}
         loading={isLoading}
         onRowClick={setDetail}
       />

@@ -169,6 +169,21 @@ function buttonNames(title: string): string[] {
     .filter((label) => label !== "");
 }
 
+describe("NewsPage — ưu tiên bài đang hiển thị", () => {
+  it("tab Tất cả đưa bài đã đăng/tới giờ lên trước nháp, chờ duyệt và lịch tương lai", () => {
+    renderPage();
+    const titles = screen.getAllByRole("row").slice(1).map((item) =>
+      within(item).getByText(/^Bài /).textContent,
+    );
+    expect(titles).toEqual([
+      "Bài tới giờ", "Bài đã đăng", "Bài nháp", "Bài chờ duyệt", "Bài đã lên lịch", "Bài từng đăng",
+    ]);
+    // Thứ tự API vẫn nguyên để hộp sắp xếp hiển thị lưu đúng dữ liệu website.
+    expect(newsRows.current).toBe(ALL_POSTS);
+    expect(newsRows.current[0]).toBe(draftPost);
+  });
+});
+
 describe("NewsPage — huy hiệu trạng thái", () => {
   it("phân biệt năm trạng thái bằng nhãn chữ", () => {
     renderPage();

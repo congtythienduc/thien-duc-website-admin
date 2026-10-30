@@ -1,4 +1,5 @@
 import { DeleteContentButton } from "@/components/content/DeleteContentButton";
+import { publishedFirst } from "@/lib/admin-content-order";
 import { usePublicationClock } from "@/lib/use-publication-clock";
 import { ContentOrderDialog } from "@/components/content/ContentOrderDialog";
 import { useState } from "react";
@@ -373,8 +374,11 @@ export function ProjectsPage() {
     },
   ];
 
-  const rows = projects.filter((p) =>
-    matchesFilter(deriveProjectPublicationState(p, now), filter),
+  const rows = publishedFirst(
+    projects.filter((p) =>
+      matchesFilter(deriveProjectPublicationState(p, now), filter),
+    ),
+    (project) => deriveProjectPublicationState(project, now),
   );
 
   return (

@@ -1,4 +1,5 @@
 import { DeleteContentButton } from "@/components/content/DeleteContentButton";
+import { publishedFirst } from "@/lib/admin-content-order";
 import { ContentOrderDialog } from "@/components/content/ContentOrderDialog";
 import { useMemo, useState } from "react";
 import {
@@ -67,8 +68,11 @@ export function RecruitmentPositionsPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const visiblePositions = useMemo(
     () =>
-      positions.filter(
-        (position) => filter === "ALL" || position.status === filter,
+      publishedFirst(
+        positions.filter(
+          (position) => filter === "ALL" || position.status === filter,
+        ),
+        (position) => position.status,
       ),
     [filter, positions],
   );

@@ -1,4 +1,5 @@
 import { DeleteContentButton } from "@/components/content/DeleteContentButton";
+import { publishedFirst } from "@/lib/admin-content-order";
 import { usePublicationClock } from "@/lib/use-publication-clock";
 import { ContentOrderDialog } from "@/components/content/ContentOrderDialog";
 import { useState } from "react";
@@ -340,10 +341,11 @@ export function NewsPage() {
   const filtered = news.filter((post) =>
     matchesFilter(derivePublicationState(post, now), filter),
   );
-  // Chỉ đổi thứ tự khi đang lọc theo lịch: câu hỏi lúc đó là "bài nào sắp lên?".
-  // Mọi bộ lọc khác giữ nguyên thứ tự mặc định của API.
+  // Tab lịch ưu tiên mốc gần nhất; danh sách tổng hợp đưa bài công khai lên trước.
   const rows =
-    filter === "SCHEDULED" ? [...filtered].sort(bySoonestSchedule) : filtered;
+    filter === "SCHEDULED"
+      ? [...filtered].sort(bySoonestSchedule)
+      : publishedFirst(filtered, (post) => derivePublicationState(post, now));
 
   // Đếm theo trạng thái suy ra: bài đã hẹn giờ tuy lưu là PENDING nhưng KHÔNG
   // nằm trong hàng chờ duyệt — không ai cần làm gì với nó cả.
